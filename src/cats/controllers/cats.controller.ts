@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Header, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpStatus, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { CatsService } from '../services/cats.service';
 import { Cat } from '../models/cat.entity';
+import { LocalAuthGuard } from '../../auth/auth-local.guard'
 
 // prefix 'cats' задает путь к данному контролеру (префиксы ко всем запросам данного контролера)
 @Controller('cats')
@@ -9,7 +10,7 @@ export class CatsController {
   constructor(private catsService: CatsService) {}
 
   /*
-    get запрос на полчуение всех котов
+    get запрос на полчуение всех котов, на что указывает декоратор `@Get()`
     url: '/cats'
    */
   @Get()
@@ -23,7 +24,7 @@ export class CatsController {
   }
 
   /*
-    get запрос на получение кота по id
+    get запрос на получение кота по id, на что указывает декоратор `@Get(':id')`
     url: '/cats/:id'
    */
   @Get(':id')
@@ -32,13 +33,24 @@ export class CatsController {
   }
 
   /*
-    post запрос на создание нового кота
-    url: '/cats
+    post запрос на создание нового кота, на что указывает декоратор `@Post()`
+    url: '/cats'
    */
   @Post()
   @Header('Cache-Control', 'none')
   create(@Body() cat: Cat): Promise<Cat> {
     // Создание кота через catsService
     return this.catsService.create(cat);
+  }
+
+  /*
+    delete запрос на удаление кода по id, на что указывает декоратор `@Delete(':id')`
+    только для авторищированныз пользователей `@UseGuards(LocalAuthGuard)`
+    url: '/cats/:id' (параметр id)
+   */
+  @Delete(':id')
+  @UseGuards(LocalAuthGuard)
+  delete(@Param('id') id: string) {
+    return this.catsService.remove(id);
   }
 }
